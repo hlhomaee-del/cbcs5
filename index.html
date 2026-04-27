@@ -252,7 +252,7 @@ footer strong{color:var(--p)}
 <tr><td style="padding:.4rem;border:1px solid var(--bd)">87880</td><td style="padding:.4rem;border:1px solid var(--bd)">Rapid strep test</td><td style="padding:.4rem;text-align:right;border:1px solid var(--bd)">$25.00</td></tr>
 <tr><td style="padding:.4rem;border:1px solid var(--bd)">36415</td><td style="padding:.4rem;border:1px solid var(--bd)">Venipuncture</td><td style="padding:.4rem;text-align:right;border:1px solid var(--bd)">$15.00</td></tr>
 </table>
-<div class="ff"><label>Box 28 Total Charge:</label><input type="text" id="chgIn" placeholder="e.g. 150.00"></div>
+<div class="ff"><label>Box 28 Total Charge:</label><input type="text" id="chgIn" placeholder="Enter total charge"></div>
 <button class="bt bt-p" onclick="checkChg()">Check</button>
 <div id="chgFb" class="fb"></div>
 </div>
@@ -530,7 +530,7 @@ quiz('q_c4',{q:'Box 24E for CPT 99213?',o:['Pointer A for J02.9','Pointer B for 
 quiz('q_c5',{q:'POS code for office visit?',o:['POS code 21 inpatient','POS code 11 office','POS code 23 emergency','POS code 22 outpatient'],a:1,r:'POS 11 = physician\'s office.'});
 quiz('q_c6',{q:'"Onset 3 days ago" on 03/10/2025; Box 14?',o:['Enter 03/10/2025','Enter 03/07/2025','Enter 03/13/2025','Leave the field blank'],a:1,r:'3 days before 03/10 = 03/07/2025.'},function(){E('c_dn').style.display='block'});
 
-function checkChg(){var v=E('chgIn').value.trim().replace('$',''),f=E('chgFb');if(v==='150.00'||v==='150'){f.className='fb v y';f.innerHTML='✅ $110 + $25 + $15 = $150.00';E('chgIn').className='ok';if(!G.ans['chg']){G.ans['chg']=true;pts(10)}}else{f.className='fb v n';f.innerHTML='❌ $110 + $25 + $15 = $150.00';E('chgIn').className='bad';brk()}}
+function checkChg(){var v=E('chgIn').value.trim().replace('$',''),f=E('chgFb');if(v==='150.00'||v==='150'){f.className='fb v y';f.innerHTML='✅ Correct. Continue to the next question.';E('chgIn').className='ok';if(!G.ans['chg']){G.ans['chg']=true;pts(10)}}else{f.className='fb v n';f.innerHTML='❌ Not correct yet. Recheck each service-line charge and try again.';E('chgIn').className='bad';brk()}}
 quiz('q_ch1',{q:'Box 28 should equal:',o:['Collected copay amount','Total 24F line charges','Payer allowed amount','Remaining balance due'],a:1,r:'Box 28 = total of all line charges.'});
 quiz('q_ch2',{q:'Service done twice same day; Box 24G?',o:['Enter unit count 1','Enter unit count 2','Double the charge only','Leave the units blank'],a:1,r:'Box 24G = units. Twice = 2.'});
 quiz('q_ch3',{q:'$30 copay collected. Where?',o:['Box 24F line charge','Box 28 total charge','Box 29 amount paid','No CMS-1500 field'],a:2,r:'Box 29 = amount paid by patient.'});
