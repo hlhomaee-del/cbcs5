@@ -435,10 +435,18 @@ function badge(id){if(G.bg[id])return;G.bg[id]=true;var el=E('b-'+id);if(el)el.c
 function upb(){E('bar').style.width=Math.min(100,Object.keys(G.ans).length/50*100)+'%'}
 function tog(el){var b=el.nextElementSibling;var o=b.classList.toggle('op');el.querySelector('span').textContent=o?'−':'+'}
 
+function shuffleArray(arr){
+for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t}
+return arr;
+}
+function makeChoices(q){
+return shuffleArray(q.o.map(function(txt,i){return {txt:txt,correct:i===q.a,orig:i}}));
+}
 function quiz(id,q,cb){
 var c=E(id);if(!c)return;
+var choices=makeChoices(q);
 var h='<div class="qq">'+q.q+'</div>';
-q.o.forEach(function(o,i){h+='<button class="qo" data-i="'+i+'">'+o+'</button>'});
+choices.forEach(function(o,i){h+='<button class="qo" data-i="'+i+'">'+o.txt+'</button>'});
 h+='<div class="fb" id="'+id+'_f"></div>';
 c.innerHTML=h;
 var btns=c.querySelectorAll('.qo');
@@ -447,13 +455,14 @@ b.addEventListener('click',function(){
 if(G.ans[id])return;
 G.ans[id]=true;
 var ch=parseInt(b.getAttribute('data-i'));
+var correctIndex=choices.findIndex(function(o){return o.correct});
 btns.forEach(function(x,j){
 x.classList.add('x');
-if(j===q.a)x.classList.add('y');
-if(j===ch&&j!==q.a)x.classList.add('n');
+if(j===correctIndex)x.classList.add('y');
+if(j===ch&&j!==correctIndex)x.classList.add('n');
 });
 var f=E(id+'_f');
-if(ch===q.a){f.className='fb v y';f.innerHTML='✅ Correct! +10<br>'+(q.r||'');pts(10)}
+if(choices[ch].correct){f.className='fb v y';f.innerHTML='✅ Correct! +10<br>'+(q.r||'');pts(10)}
 else{f.className='fb v n';f.innerHTML='❌ '+(q.r||'');brk()}
 if(cb)cb();
 })
@@ -499,39 +508,39 @@ g.appendChild(d);
 })
 })();
 
-quiz('q_m0',{q:'What is the CMS-1500 used for?',o:['Ordering labs','Billing insurance for professional services','Scheduling appointments','Recording vitals'],a:1,r:'The CMS-1500 is the standard form for billing professional medical services.'},function(){E('m_info').style.display='block'});
-quiz('q_m1',{q:'Which boxes have patient and insurance info?',o:['Boxes 1–13','Boxes 14–24','Boxes 25–33','All boxes'],a:0,r:'Boxes 1–13 cover patient demographics and insurance.'});
-quiz('q_m2',{q:'Where are CPT codes entered?',o:['Box 21','Box 24','Box 28','Box 33'],a:1,r:'Box 24 has the service lines with CPT codes, dates, charges, and units.'});
-quiz('q_m3',{q:'Current CMS-1500 version?',o:['(01/05)','(08/05)','(02/12)','(01/20)'],a:2,r:'Current version is CMS-1500 (02/12).'},function(){E('m_dn').style.display='block'});
+quiz('q_m0',{q:'What is the CMS-1500 used for?',o:['Requesting routine lab orders','Billing professional care services','Scheduling office appointments','Documenting patient vital signs'],a:1,r:'The CMS-1500 is the standard form for billing professional medical services.'},function(){E('m_info').style.display='block'});
+quiz('q_m1',{q:'Which boxes have patient and insurance info?',o:['Boxes 1 through 13','Boxes 14 through 24','Boxes 25 through 33','Every numbered box'],a:0,r:'Boxes 1–13 cover patient demographics and insurance.'});
+quiz('q_m2',{q:'Where are CPT codes entered?',o:['Box 21 diagnosis area','Box 24 service lines','Box 28 total charge','Box 33 billing area'],a:1,r:'Box 24 has the service lines with CPT codes, dates, charges, and units.'});
+quiz('q_m3',{q:'Current CMS-1500 version?',o:['Form version 01/05','Form version 08/05','Form version 02/12','Form version 01/20'],a:2,r:'Current version is CMS-1500 (02/12).'},function(){E('m_dn').style.display='block'});
 
 var CA=[{l:'Box 1a: Insured ID',a:'BCB882461035'},{l:'Box 2: Patient Name',a:'JOHNSON, MARIA T'},{l:'Box 3: DOB',a:'03/15/1985'},{l:'Box 11: Group #',a:'GRP-7742'}];
 (function(){var c=E('cfArea');CA.forEach(function(f,i){c.innerHTML+='<div class="ff"><label>'+f.l+'</label><input type="text" id="cf'+i+'" placeholder="Type answer"></div>'})})();
 function checkCF(){var ok=true,h='';CA.forEach(function(f,i){var inp=E('cf'+i),v=inp.value.trim().toUpperCase(),a=f.a.toUpperCase();if(v===a){inp.className='ok';h+='<p style="color:var(--ok)">✅ '+f.l+'</p>'}else{inp.className='bad';h+='<p style="color:var(--err)">❌ '+f.l+': <b>'+f.a+'</b></p>';ok=false}});E('cfFb').innerHTML=h;if(ok&&!G.ans['cf']){G.ans['cf']=true;pts(20)}}
 
-quiz('q_p1',{q:'The copay ($30) from the card — goes on the CMS-1500?',o:['Yes, Box 29','Yes, Box 28','No, copay is not reported on the claim','Yes, Box 24F'],a:2,r:'Copay is NOT entered on the CMS-1500 by the biller.'});
-quiz('q_p2',{q:'RxBin on the insurance card is for:',o:['Box 1a','Pharmacy claims only — not CMS-1500','Box 11','Box 25'],a:1,r:'RxBin is for pharmacy claims. Not CMS-1500.'});
-quiz('q_p3',{q:'Patient relationship to insured goes in:',o:['Box 4','Box 5','Box 6','Box 7'],a:2,r:'Box 6 = relationship to insured (Self, Spouse, Child, Other).'});
-quiz('q_p4',{q:'Patient IS the insured. Box 6 =',o:['Spouse','Child','Other','Self'],a:3,r:'Patient is the policyholder → "Self."'});
-quiz('q_p5',{q:'"Effective" date from the card goes in:',o:['Box 14','Box 11','Does NOT go on CMS-1500','Box 3'],a:2,r:'The effective date is not a CMS-1500 field.'},function(){E('p_dn').style.display='block'});
+quiz('q_p1',{q:'The copay ($30) from the card goes on the CMS-1500?',o:['Yes; enter it in Box 29','Yes; enter it in Box 28','No; do not report it there','Yes; enter it in Box 24F'],a:2,r:'Copay is NOT entered on the CMS-1500 by the biller.'});
+quiz('q_p2',{q:'RxBin on the insurance card is for:',o:['Insured ID entry in Box 1a','Pharmacy claim processing','Group number entry in Box 11','Provider tax ID in Box 25'],a:1,r:'RxBin is for pharmacy claims. Not CMS-1500.'});
+quiz('q_p3',{q:'Patient relationship to insured goes in:',o:['Box 4 insured name field','Box 5 patient address field','Box 6 relationship field','Box 7 insured address field'],a:2,r:'Box 6 = relationship to insured (Self, Spouse, Child, Other).'});
+quiz('q_p4',{q:'Patient IS the insured. Box 6 =',o:['Spouse relationship option','Child relationship option','Other relationship option','Self relationship option'],a:3,r:'Patient is the policyholder → "Self."'});
+quiz('q_p5',{q:'"Effective" date from the card goes in:',o:['Box 14 onset date field','Box 11 policy field','No CMS-1500 field','Box 3 birth date field'],a:2,r:'The effective date is not a CMS-1500 field.'},function(){E('p_dn').style.display='block'});
 
-quiz('q_c1',{q:'Which diagnosis from the note goes in Box 21?',o:['Hypertension, GERD, and pharyngitis','Only acute pharyngitis (J02.9)','All history','Smoker status'],a:1,r:'Only the diagnosis justifying today\'s services. HTN and GERD are not treated today.'});
-quiz('q_c2',{q:'Patient smoking history — on this claim?',o:['Yes, always','No, not the reason for the visit','Yes, Box 10','Only with lung cancer'],a:1,r:'Smoking is social history. Unless being treated/counseled today, it doesn\'t go on the claim.'});
-quiz('q_c3',{q:'Box 24D service line 1 CPT code?',o:['J02.9','99213','87880','Both'],a:1,r:'Box 24D = CPT code. Line 1 = 99213. Line 2 = 87880.'});
-quiz('q_c4',{q:'Box 24E for CPT 99213?',o:['A (points to J02.9)','B','1','Full ICD code'],a:0,r:'Box 24E uses letter pointers matching Box 21. J02.9 is diagnosis A.'});
-quiz('q_c5',{q:'POS code for office visit?',o:['21','11','23','22'],a:1,r:'POS 11 = physician\'s office.'});
-quiz('q_c6',{q:'"Onset 3 days ago" on 03/10/2025 — Box 14?',o:['03/10/2025','03/07/2025','03/13/2025','Blank'],a:1,r:'3 days before 03/10 = 03/07/2025.'},function(){E('c_dn').style.display='block'});
+quiz('q_c1',{q:'Which diagnosis from the note goes in Box 21?',o:['Hypertension with GERD history','Acute pharyngitis (J02.9)','Complete past medical history','Current smoking status only'],a:1,r:'Only the diagnosis justifying today\'s services. HTN and GERD are not treated today.'});
+quiz('q_c2',{q:'Patient smoking history on this claim?',o:['Yes; always report it','No; not the visit reason','Yes; place it in Box 10','Only for cancer billing'],a:1,r:'Smoking is social history. Unless being treated/counseled today, it doesn\'t go on the claim.'});
+quiz('q_c3',{q:'Box 24D service line 1 CPT code?',o:['Diagnosis code J02.9','Procedure code 99213','Procedure code 87880','Both listed procedures'],a:1,r:'Box 24D = CPT code. Line 1 = 99213. Line 2 = 87880.'});
+quiz('q_c4',{q:'Box 24E for CPT 99213?',o:['Pointer A for J02.9','Pointer B for history','Number 1 as pointer','Full ICD-10 code'],a:0,r:'Box 24E uses letter pointers matching Box 21. J02.9 is diagnosis A.'});
+quiz('q_c5',{q:'POS code for office visit?',o:['POS code 21 inpatient','POS code 11 office','POS code 23 emergency','POS code 22 outpatient'],a:1,r:'POS 11 = physician\'s office.'});
+quiz('q_c6',{q:'"Onset 3 days ago" on 03/10/2025; Box 14?',o:['Enter 03/10/2025','Enter 03/07/2025','Enter 03/13/2025','Leave the field blank'],a:1,r:'3 days before 03/10 = 03/07/2025.'},function(){E('c_dn').style.display='block'});
 
 function checkChg(){var v=E('chgIn').value.trim().replace('$',''),f=E('chgFb');if(v==='150.00'||v==='150'){f.className='fb v y';f.innerHTML='✅ $110 + $25 + $15 = $150.00';E('chgIn').className='ok';if(!G.ans['chg']){G.ans['chg']=true;pts(10)}}else{f.className='fb v n';f.innerHTML='❌ $110 + $25 + $15 = $150.00';E('chgIn').className='bad';brk()}}
-quiz('q_ch1',{q:'Box 28 should equal:',o:['Copay','Sum of all Box 24F charges','Allowed amount','Balance'],a:1,r:'Box 28 = total of all line charges.'});
-quiz('q_ch2',{q:'Service done twice same day — Box 24G?',o:['1','2','Charge x2','Blank'],a:1,r:'Box 24G = units. Twice = 2.'});
-quiz('q_ch3',{q:'$30 copay collected. Where?',o:['Box 24F','Box 28','Box 29','Not on CMS-1500'],a:2,r:'Box 29 = amount paid by patient.'});
-quiz('q_ch4',{q:'Line 1=$155, Line 2=$85. Box 28?',o:['$155','$85','$240','$70'],a:2,r:'$155+$85=$240.'},function(){E('ch_dn').style.display='block'});
+quiz('q_ch1',{q:'Box 28 should equal:',o:['Collected copay amount','Total 24F line charges','Payer allowed amount','Remaining balance due'],a:1,r:'Box 28 = total of all line charges.'});
+quiz('q_ch2',{q:'Service done twice same day; Box 24G?',o:['Enter unit count 1','Enter unit count 2','Double the charge only','Leave the units blank'],a:1,r:'Box 24G = units. Twice = 2.'});
+quiz('q_ch3',{q:'$30 copay collected. Where?',o:['Box 24F line charge','Box 28 total charge','Box 29 amount paid','No CMS-1500 field'],a:2,r:'Box 29 = amount paid by patient.'});
+quiz('q_ch4',{q:'Line 1=$155, Line 2=$85. Box 28?',o:['Total charge $155','Total charge $85','Total charge $240','Total charge $70'],a:2,r:'$155+$85=$240.'},function(){E('ch_dn').style.display='block'});
 
 var PA=[{l:'Box 25: EIN',a:'59-3847261'},{l:'Box 33: Billing NPI',a:'1234567890'},{l:'Box 33: Practice Name',a:'SUNRISE FAMILY MEDICINE'},{l:'Box 33: Phone',a:'(813) 555-0142'}];
 (function(){var c=E('pfArea');PA.forEach(function(f,i){c.innerHTML+='<div class="ff"><label>'+f.l+'</label><input type="text" id="pf'+i+'" placeholder="Type answer"></div>'})})();
 function checkPF(){var ok=true,h='';PA.forEach(function(f,i){var inp=E('pf'+i),v=inp.value.trim().toUpperCase().replace(/\s+/g,' '),a=f.a.toUpperCase();if(v===a){inp.className='ok';h+='<p style="color:var(--ok)">✅ '+f.l+'</p>'}else{inp.className='bad';h+='<p style="color:var(--err)">❌ '+f.l+': <b>'+f.a+'</b></p>';ok=false}});E('pfFb').innerHTML=h;if(ok&&!G.ans['pf']){G.ans['pf']=true;pts(20)}}
-quiz('q_pr1',{q:'Office manager\'s name goes on CMS-1500.',o:['True','False'],a:1,r:'Only providers and NPIs go on the claim.'});
-quiz('q_pr2',{q:'Rendering vs billing differ — Box 33 NPI is:',o:['Rendering','Billing provider/practice','Both','Neither'],a:1,r:'Box 33 = billing NPI. Rendering NPI goes in Box 24J.'},function(){E('pr_dn').style.display='block'});
+quiz('q_pr1',{q:'Office manager\'s name goes on CMS-1500.',o:['True statement','False statement'],a:1,r:'Only providers and NPIs go on the claim.'});
+quiz('q_pr2',{q:'Rendering vs billing differ; Box 33 NPI is:',o:['Rendering provider NPI','Billing provider NPI','Both provider NPIs','Neither provider NPI'],a:1,r:'Box 33 = billing NPI. Rendering NPI goes in Box 24J.'},function(){E('pr_dn').style.display='block'});
 
 var SI=[
 {t:'Patient Name: Robert A. Davis',k:true},
@@ -552,9 +561,9 @@ var SI=[
 ];
 (function(){var c=E('simArea');SI.forEach(function(item,i){var d=document.createElement('div');d.className='ck';d.innerHTML='<input type="checkbox" id="si'+i+'"><label for="si'+i+'">'+item.t+'</label>';d.addEventListener('click',function(e){if(e.target.tagName!=='INPUT'){E('si'+i).checked=!E('si'+i).checked}});c.appendChild(d)})})();
 function checkSim(){var ct=0;SI.forEach(function(item,i){var ch=E('si'+i).checked,p=E('si'+i).closest('.ck');if(ch===item.k){ct++;p.style.borderColor='var(--ok)';p.style.background='#f0fdf4'}else{p.style.borderColor='var(--err)';p.style.background='#fff1f2'}});E('simFb').innerHTML='<p><b>'+ct+'/'+SI.length+' correct</b></p><p style="font-size:.83rem;color:var(--tx2)">Emergency contact, favorite color, employer, GERD, medications, and hobbies do NOT go on the CMS-1500.</p>';if(ct>=12&&!G.ans['sim']){G.ans['sim']=true;pts(20)}}
-quiz('q_s1',{q:'Employer name goes on standard CMS-1500 claim.',o:['True — Box 11c','False — not required for most claims'],a:1,r:'Not required for standard insurance billing.'});
-quiz('q_s2',{q:'GERD in history, visit for back pain. Box 21?',o:['Yes, list all','No, only today\'s diagnoses'],a:1,r:'Only diagnoses supporting today\'s services.'});
-quiz('q_s3',{q:'Onset 03/19/2025 goes in:',o:['Box 3','Box 14','Box 15','Box 24A'],a:1,r:'Box 14 = date of onset.'},function(){E('sim_dn').style.display='block'});
+quiz('q_s1',{q:'Employer name goes on standard CMS-1500 claim.',o:['True; enter it in Box 11c','False; usually not required'],a:1,r:'Not required for standard insurance billing.'});
+quiz('q_s2',{q:'GERD in history, visit for back pain. Box 21?',o:['Yes; list history diagnoses','No; list visit diagnoses'],a:1,r:'Only diagnoses supporting today\'s services.'});
+quiz('q_s3',{q:'Onset 03/19/2025 goes in:',o:['Box 3 birth date field','Box 14 onset field','Box 15 other date field','Box 24A service date'],a:1,r:'Box 14 = date of onset.'},function(){E('sim_dn').style.display='block'});
 
 var FC=[
 {l:'Box 1a: Insured ID',a:'UHC-445896201'},
@@ -579,32 +588,32 @@ var FC=[
 function checkFC(){var ct=0,t=FC.length,h='';FC.forEach(function(f,i){var el=E('fc'+i),v=(el.value||'').trim().toUpperCase().replace(/\s+/g,' '),a=f.a.toUpperCase();if(v===a){ct++;el.className='ok';h+='<p style="color:var(--ok)">✅ '+f.l+'</p>'}else{el.className='bad';h+='<p style="color:var(--err)">❌ '+f.l+': <b>'+f.a+'</b></p>'}});h='<h4>'+ct+'/'+t+' ('+Math.round(ct/t*100)+'%)</h4>'+h;if(ct===t)h+='<p style="margin-top:.4rem;font-weight:700;color:var(--ok)">🎉 Perfect claim!</p>';E('fcFb').innerHTML=h;if(ct>=14&&!G.ans['fc']){G.ans['fc']=true;pts(30)}}
 
 var TP=[
-{q:'CMS-1500 bills for:',o:['Pharmacy claims','Dental services','Professional services','Inpatient facility'],a:2,r:'CMS-1500 = professional services. Facilities use UB-04.'},
-{q:'Boxes 1–13 contain:',o:['Patient & insurance info','Provider info','Service details','Dx codes'],a:0,r:'Boxes 1–13 = patient demographics & insurance.'},
-{q:'Box 21 is for:',o:['CPT codes','NPIs','Address','ICD-10 diagnosis codes'],a:3,r:'Box 21 = ICD-10-CM diagnoses.'},
-{q:'Box 24D contains:',o:['DX pointer','Charges','CPT/HCPC code','Units'],a:2,r:'Box 24D = procedure code.'},
-{q:'Box 24E uses:',o:['CPT codes','ICD codes','Numbers 1–12','Letters A–L'],a:3,r:'Box 24E = letter pointers to Box 21.'},
-{q:'Box 28 contains:',o:['NPI','Total charges','Amt paid','Group #'],a:1,r:'Box 28 = sum of all charges.'},
-{q:'Box 33 contains:',o:['Billing provider & NPI','Patient info','Rendering only','Dx codes'],a:0,r:'Box 33 = billing provider info & NPI.'},
-{q:'POS 11 =',o:['Inpatient','Outpatient hospital','ER','Office'],a:3,r:'POS 11 = office.'},
-{q:'RxBin goes on CMS-1500.',o:['False','True'],a:0,r:'RxBin = pharmacy only. Not on CMS-1500.'},
-{q:'Emergency contact on CMS-1500?',o:['Box 4','Not on form','Box 5','Box 9'],a:1,r:'Not reported on CMS-1500.'},
-{q:'Patient = insured. Box 6:',o:['Other','Spouse','Child','Self'],a:3,r:'Self.'},
-{q:'Box 14 is for:',o:['Date of onset','DOS','DOB','Date filed'],a:0,r:'Box 14 = onset date.'},
-{q:'2 CPTs same date = how many lines?',o:['Depends','1','0','2'],a:3,r:'Each CPT = own line.'},
-{q:'Box 25:',o:['Group #','Claim #','Patient SSN','Provider tax ID'],a:3,r:'Box 25 = EIN or SSN.'},
-{q:'Box 24G:',o:['Units','Charges','DX pointer','POS'],a:0,r:'Box 24G = units.'},
-{q:'GERD in history, ankle sprain visit. Box 21:',o:['Both','Neither','Only sprain','Only GERD'],a:2,r:'Only today’s diagnoses.'},
-{q:'Accept Assignment means:',o:['Hospital accepts','Patient accepts','Payer accepts claim','Provider accepts allowed amount'],a:3,r:'Provider accepts allowed amount.'},
-{q:'Electronic CMS-1500 =',o:['837P','UB-04','837I','ADA'],a:0,r:'837P = electronic CMS-1500.'},
-{q:'Box 29:',o:['Balance','Insurance payment','Total charges','Amount patient paid'],a:3,r:'Box 29 = patient payment.'},
-{q:'Lines: $100, $50, $75. Box 28:',o:['$175','$225','$100','$150'],a:1,r:'$100+$50+$75=$225.'},
-{q:'Box 31 signed by:',o:['Manager','Rendering provider','Patient','Insurance'],a:1,r:'Rendering provider.'},
-{q:'Max diagnoses on CMS-1500 (02/12):',o:['Unlimited','4','12','8'],a:2,r:'Up to 12.'},
-{q:'"Signature on File" Box 12:',o:['Electronic','Not signed','Illegible','Sig on file at office'],a:3,r:'Authorization on file.'},
-{q:'Box 1 asks for:',o:['Insured ID','NPI','Insurance type','Patient name'],a:2,r:'Box 1 = insurance type.'},
-{q:'Box 32:',o:['Patient address','Payer address','Billing address','Service facility'],a:3,r:'Box 32 = where service was done.'}
-];
+{q:'CMS-1500 bills for:',o:['Pharmacy claim services','Dental claim services','Professional care services','Inpatient facility care'],a:2,r:'CMS-1500 = professional services. Facilities use UB-04.'},
+{q:'Boxes 1–13 contain:',o:['Patient and insurance data','Provider and billing data','Service and charge data','Diagnosis pointer data'],a:0,r:'Boxes 1–13 = patient demographics & insurance.'},
+{q:'Box 21 is for:',o:['Procedure CPT codes','Provider NPI numbers','Patient street address','ICD-10 diagnosis codes'],a:3,r:'Box 21 = ICD-10-CM diagnoses.'},
+{q:'Box 24D contains:',o:['Diagnosis pointer letter','Line charge amount','CPT or HCPCS code','Number of service units'],a:2,r:'Box 24D = procedure code.'},
+{q:'Box 24E uses:',o:['Procedure code values','Diagnosis code values','Numeric values 1–12','Letter values A–L'],a:3,r:'Box 24E = letter pointers to Box 21.'},
+{q:'Box 28 contains:',o:['Billing provider NPI','Total line charges','Patient amount paid','Insurance group number'],a:1,r:'Box 28 = sum of all charges.'},
+{q:'Box 33 contains:',o:['Billing provider data','Patient demographic data','Rendering provider only','Diagnosis code listing'],a:0,r:'Box 33 = billing provider info & NPI.'},
+{q:'POS 11 means:',o:['Inpatient hospital','Outpatient hospital','Emergency department','Physician office'],a:3,r:'POS 11 = office.'},
+{q:'RxBin goes on CMS-1500.',o:['False statement','True statement'],a:0,r:'RxBin = pharmacy only. Not on CMS-1500.'},
+{q:'Emergency contact on CMS-1500?',o:['Enter in Box 4','Not reported there','Enter in Box 5','Enter in Box 9'],a:1,r:'Not reported on CMS-1500.'},
+{q:'Patient = insured. Box 6:',o:['Other relationship','Spouse relationship','Child relationship','Self relationship'],a:3,r:'Self.'},
+{q:'Box 14 is for:',o:['Illness onset date','Service visit date','Patient birth date','Claim filing date'],a:0,r:'Box 14 = onset date.'},
+{q:'Two CPTs same date; how many lines?',o:['Depends on payer','One combined line','No service lines','Two service lines'],a:3,r:'Each CPT = own line.'},
+{q:'Box 25 records:',o:['Insurance group number','Internal claim number','Patient Social Security','Provider tax ID number'],a:3,r:'Box 25 = EIN or SSN.'},
+{q:'Box 24G records:',o:['Service unit count','Line charge amount','Diagnosis pointer','Place of service'],a:0,r:'Box 24G = units.'},
+{q:'GERD in history, ankle sprain visit. Box 21:',o:['Report both diagnoses','Report neither code','Report ankle sprain','Report GERD only'],a:2,r:'Only today’s diagnoses.'},
+{q:'Accept Assignment means:',o:['Hospital accepts claim','Patient accepts charge','Payer accepts claim','Provider accepts allowed amount'],a:3,r:'Provider accepts allowed amount.'},
+{q:'Electronic CMS-1500 equals:',o:['837P transaction','UB-04 paper form','837I transaction','ADA dental claim'],a:0,r:'837P = electronic CMS-1500.'},
+{q:'Box 29 records:',o:['Remaining balance','Insurance payment','Total line charges','Patient amount paid'],a:3,r:'Box 29 = patient payment.'},
+{q:'Lines: $100, $50, $75. Box 28:',o:['Total equals $175','Total equals $225','Total equals $100','Total equals $150'],a:1,r:'$100+$50+$75=$225.'},
+{q:'Box 31 signed by:',o:['Office manager','Rendering provider','Patient account holder','Insurance payer'],a:1,r:'Rendering provider.'},
+{q:'Max diagnoses on CMS-1500 (02/12):',o:['Unlimited codes','Four total codes','Twelve total codes','Eight total codes'],a:2,r:'Up to 12.'},
+{q:'"Signature on File" Box 12 means:',o:['Electronic filing only','No signature exists','Signature unreadable','Authorization is stored'],a:3,r:'Authorization on file.'},
+{q:'Box 1 asks for:',o:['Insured ID number','Provider NPI value','Insurance type mark','Patient full name'],a:2,r:'Box 1 = insurance type.'},
+{q:'Box 32 records:',o:['Patient home address','Payer mailing address','Billing office address','Service facility site'],a:3,r:'Box 32 = where service was done.'}
+]
 
 var T={on:false,qs:[],i:0,sc:0,sk:0,tmr:null,sec:600,ans:[]};
 function startT(){
@@ -622,21 +631,25 @@ if(T.sec<=0)endT();
 function showTQ(){
 if(T.i>=T.qs.length){endT();return}
 var q=T.qs[T.i];
+q._choices=makeChoices(q);
 var h='<div class="qq"><span class="tg tg-b">Q'+(T.i+1)+'/20</span> '+q.q+'</div>';
-q.o.forEach(function(o,i){h+='<button class="qo" data-i="'+i+'">'+o+'</button>'});
+q._choices.forEach(function(o,i){h+='<button class="qo" data-i="'+i+'">'+o.txt+'</button>'});
 h+='<div class="fb" id="tf"></div>';
 E('tQ').innerHTML=h;
 E('tQ').querySelectorAll('.qo').forEach(function(b){
-b.addEventListener('click',function(){tAns(parseInt(b.getAttribute('data-i')),q.a)});
+b.addEventListener('click',function(){tAns(parseInt(b.getAttribute('data-i')))});
 });
 }
-function tAns(ch,a){
+function tAns(ch){
 var btns=E('tQ').querySelectorAll('.qo');
-btns.forEach(function(b,i){b.classList.add('x');b.onclick=null;if(i===a)b.classList.add('y');if(i===ch&&i!==a)b.classList.add('n')});
-var f=E('tf'),q=T.qs[T.i];
-if(ch===a){T.sc++;T.sk++;f.className='fb v y';f.innerHTML='✅ Correct!';pts(10)}
+var q=T.qs[T.i];
+var choices=q._choices;
+var correctIndex=choices.findIndex(function(o){return o.correct});
+btns.forEach(function(b,i){b.classList.add('x');b.onclick=null;if(i===correctIndex)b.classList.add('y');if(i===ch&&i!==correctIndex)b.classList.add('n')});
+var f=E('tf');
+if(choices[ch].correct){T.sc++;T.sk++;f.className='fb v y';f.innerHTML='✅ Correct!';pts(10)}
 else{T.sk=0;f.className='fb v n';f.innerHTML='❌ '+q.r;brk()}
-T.ans.push({q:q.q,ok:ch===a,ai:a,ci:ch,o:q.o});
+T.ans.push({q:q.q,ok:choices[ch].correct,ai:correctIndex,ci:ch,o:choices.map(function(x){return x.txt})});
 E('tSc').textContent=T.sc;E('tSk').textContent=T.sk;
 T.i++;setTimeout(showTQ,1200);
 }
